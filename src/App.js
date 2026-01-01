@@ -7,13 +7,11 @@ import awsExports from "./aws-exports";
 
 Amplify.configure(awsExports);
 
-// Your API Gateway endpoint
+// our API Gateway endpoint
 const API_ENDPOINT =
   "https://eumo877d2e.execute-api.eu-north-1.amazonaws.com/v1";
 
-// --- Language Lists ---
-// (We now have two lists: one for source, one for target)
-const baseLanguages = [
+const targetLanguages = [
   { code: "af", name: "Afrikaans" },
   { code: "sq", name: "Albanian" },
   { code: "am", name: "Amharic" },
@@ -31,7 +29,7 @@ const baseLanguages = [
   { code: "da", name: "Danish" },
   { code: "fa-AF", name: "Dari" },
   { code: "nl", name: "Dutch" },
-  { code: "en", name: "English" },
+  { code: "en", name: "English" }, // English is included here but is the fixed source
   { code: "et", name: "Estonian" },
   { code: "fa", name: "Farsi (Persian)" },
   { code: "tl", name: "Filipino, Tagalog" },
@@ -91,14 +89,6 @@ const baseLanguages = [
   { code: "cy", name: "Welsh" },
 ];
 
-const sourceLanguages = [
-  { code: "auto", name: "Detect Language" },
-  ...baseLanguages,
-];
-const targetLanguages = [...baseLanguages];
-
-// --- Styles Object ---
-// (Keeping styles in one place for easier edits)
 const styles = {
   appContainer: {
     padding: "20px",
@@ -146,6 +136,14 @@ const styles = {
     marginBottom: "16px",
     padding: "0 10px",
   },
+  fixedLanguage: {
+    fontSize: "16px",
+    fontWeight: "bold",
+    padding: "8px",
+    color: "#555",
+    width: "300px",
+    textAlign: "left",
+  },
   swapButton: {
     background: "transparent",
     border: "none",
@@ -157,11 +155,11 @@ const styles = {
   },
   panelsContainer: {
     display: "flex",
-    flexDirection: "row", // Side-by-side
+    flexDirection: "row",
     gap: "20px",
   },
   panel: {
-    flex: 1, // Each panel takes 50% width
+    flex: 1,
     display: "flex",
     flexDirection: "column",
     minHeight: "250px",
@@ -199,7 +197,7 @@ const styles = {
     borderTop: "1px solid #e0e0e0",
     background: "#fff",
     borderRadius: "0 0 8px 8px",
-    minHeight: "24px", // Ensure footer has height even if empty
+    minHeight: "24px",
   },
   charCount: {
     fontSize: "12px",
@@ -243,8 +241,6 @@ const styles = {
   },
 };
 
-// --- NEW: Searchable LanguageSelector Component ---
-// This is the component you requested for searching languages
 const LanguageSelector = ({ languages, value, onChange, id }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [filter, setFilter] = useState("");
@@ -257,12 +253,11 @@ const LanguageSelector = ({ languages, value, onChange, id }) => {
     lang.name.toLowerCase().includes(filter.toLowerCase())
   );
 
-  // Effect to handle clicking outside the dropdown to close it
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (ref.current && !ref.current.contains(event.target)) {
         setIsOpen(false);
-        setFilter(""); // Clear filter on close
+        setFilter("");
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -280,13 +275,13 @@ const LanguageSelector = ({ languages, value, onChange, id }) => {
   const toggleOpen = () => {
     setIsOpen(!isOpen);
     if (isOpen) {
-      setFilter(""); // Clear filter if closing
+      setFilter("");
     }
   };
 
   const selectorStyle = {
     position: "relative",
-    zIndex: 10, // Ensure it appears above other elements
+    zIndex: 10,
   };
 
   const buttonStyle = {
@@ -381,8 +376,10 @@ const LanguageSelector = ({ languages, value, onChange, id }) => {
 
 // --- Main App Component ---
 function App({ signOut, user }) {
+  // Hardcode the source language, since it's fixed (e.g., English)
+  const sourceLanguage = "en";
+
   const [text, setText] = useState("");
-  const [sourceLanguage, setSourceLanguage] = useState("auto"); // New state
   const [targetLanguage, setTargetLanguage] = useState("es");
   const [result, setResult] = useState(null);
   const [status, setStatus] = useState("idle"); // idle, pending, completed, failed
@@ -464,7 +461,7 @@ function App({ signOut, user }) {
         },
         body: JSON.stringify({
           text,
-          sourceLanguage: sourceLanguage, // Use state instead of "auto"
+          sourceLanguage: sourceLanguage, // Use the hardcoded constant
           targetLanguage,
         }),
       });
@@ -488,7 +485,7 @@ function App({ signOut, user }) {
     }
   };
 
-  // --- NEW UI Handlers ---
+  // --- NEW UI Handlers (Simplified) ---
   const handleTextChange = (e) => {
     setText(e.target.value);
     // Clear old results when user types
@@ -510,22 +507,8 @@ function App({ signOut, user }) {
     }
   };
 
-  const handleSwap = () => {
-    if (sourceLanguage === "auto") return; // Can't swap "Detect"
-
-    // Swap languages
-    const newSource = targetLanguage;
-    const newTarget = sourceLanguage;
-    setSourceLanguage(newSource);
-    setTargetLanguage(newTarget);
-
-    // Swap text content
-    if (status === "completed") {
-      setText(result || "");
-      setResult(null); // Clear result, ready for new translation
-      setStatus("idle");
-    }
-  };
+  // The handleSwap function is now unnecessary, but for safety, it's removed
+  // const handleSwap = () => { ... }
 
   // --- RENDER ---
   const isLoading = status === "pending";
@@ -534,7 +517,7 @@ function App({ signOut, user }) {
   return (
     <div style={styles.appContainer}>
       <div style={styles.header}>
-        <h1 style={styles.title}>AWS Serverless Translator</h1>
+        <h1 style={styles.title}>AWS Serverless Translator (English Source)</h1>
         <button
           onClick={signOut}
           style={styles.signOutButton}
@@ -551,24 +534,15 @@ function App({ signOut, user }) {
         </strong>
       </p>
 
-      {/* Language Selection Bar */}
+      {/* Language Selection Bar (Source side is now fixed text) */}
       <div style={styles.languageBar}>
-        <LanguageSelector
-          id="source-lang-search"
-          languages={sourceLanguages}
-          value={sourceLanguage}
-          onChange={setSourceLanguage}
-        />
-        <button
-          title="Swap languages"
-          style={styles.swapButton}
-          onClick={handleSwap}
-          disabled={sourceLanguage === "auto"}
-          onMouseOver={(e) => (e.currentTarget.style.transform = "scale(1.1)")}
-          onMouseOut={(e) => (e.currentTarget.style.transform = "scale(1)")}
-        >
-          ↔
-        </button>
+        {/* FIXED SOURCE LANGUAGE */}
+        <div style={styles.fixedLanguage}>English (Source)</div>
+
+        {/* Empty space for alignment where the swap button used to be */}
+        <div style={{ width: "44px" }}></div>
+
+        {/* TARGET LANGUAGE SELECTOR (Unchanged) */}
         <LanguageSelector
           id="target-lang-search"
           languages={targetLanguages}
@@ -586,7 +560,7 @@ function App({ signOut, user }) {
               style={styles.textarea}
               value={text}
               onChange={handleTextChange}
-              placeholder="Enter text to translate"
+              placeholder="Enter text to translate from English"
               required
               maxLength={5000} // Added a max length
             />
