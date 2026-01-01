@@ -22,7 +22,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# ✅ Ignore Amplify sensitive/local config (OUR RULES)
+
 aws-exports.js
 amplify/.config/local-env-info.json
 amplify/team-provider-info.json
